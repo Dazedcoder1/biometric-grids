@@ -53,6 +53,16 @@ def test_manage_target_owner_or_admin():
     assert R.can_manage_target(OA, None, None, has_manage=True)
 
 
+def test_department_targets_belong_to_that_departments_admin():
+    # DA runs EMP's department; a Department Admin of another department may not touch it.
+    assert R.can_manage_target(DA, None, None, has_manage=True, target_dept_id=DA.dept_id)
+    assert not R.can_manage_target(DA, None, None, has_manage=True, target_dept_id=(DA.dept_id or 0) + 99)
+    assert R.sees_department_targets(DA, DA.dept_id)
+    assert not R.sees_department_targets(DA, (DA.dept_id or 0) + 99)
+    assert not R.sees_department_targets(EMP, EMP.dept_id)     # employees in it do not see it
+    assert R.sees_department_targets(OA, 12345)
+
+
 def test_clamp_and_hours():
     assert R.clamp_progress(150) == 100 and R.clamp_progress(-5) == 0
     assert R.clamp_progress("40") == 40 and R.clamp_progress("x") == 0

@@ -859,7 +859,7 @@ async def _render_targets(db, ctx, tid, targets: list[Target]) -> list[dict]:
         owner = None
         if t.user_id:
             owner = await _owner(db, t)
-        can_manage = R.can_manage_target(ctx.user, t.user_id, owner, has_manage, tid)
+        can_manage = R.can_manage_target(ctx.user, t.user_id, owner, has_manage, tid, t.dept_id)
         out.append(_target_view(t, ms.get(t.id, []), names.get(t.user_id), depts.get(t.dept_id), today,
                                 can_manage=can_manage))
     return out
@@ -869,8 +869,10 @@ async def _render_targets(db, ctx, tid, targets: list[Target]) -> list[dict]:
 async def my_targets(ctx: SecurityContext = Depends(get_security_context), db: AsyncSession = Depends(get_db)):
     tid = _tid(ctx)
     conds = [Target.user_id == ctx.user.id]
-    if ctx.user.dept_id:
-        conds.append(Target.dept_id == ctx.user.dept_id)      # department targets I share in
+    # A department target goes to the Department Admin who runs it, not to
+    # everyone in the department.
+    if ctx.user.role == "org_admin" and ctx.user.dept_id:
+        conds.append((Target.user_id.is_(None)) & (Target.dept_id == ctx.user.dept_id))
     targets = (await db.execute(select(Target).where(
         Target.tenant_id == tid, or_(*conds)).order_by(Target.start_date))).scalars().all()
     return await _render_targets(db, ctx, tid, targets)
@@ -951,6 +953,19 @@ async def create_target(data: TargetIn, ctx: SecurityContext = Depends(require_p
             title=f"New target: {t.title}",
             message=f"Due {t.end_date.isoformat()}. Track it under My Targets.",
             entity_type="target", entity_id=t.id, entity_name=t.title)
+    else:
+        # A department target is handed to the department's admin to run.
+        admins = (await db.execute(select(User.id).where(
+            User.tenant_id == tid, User.dept_id == t.dept_id, User.role == "org_admin",
+            User.is_active.is_(True)))).scalars().all()
+        for admin_id in admins:
+            if admin_id == ctx.user.id:
+                continue
+            await notification_service.notify_single_user(
+                db, tenant_id=tid, actor_id=ctx.user.id, recipient_id=admin_id, event_type="target_assigned",
+                title=f"New department target: {t.title}",
+                message=f"Due {t.end_date.isoformat()}. Track it under Targets.",
+                entity_type="target", entity_id=t.id, entity_name=t.title)
     await db.commit()
     return (await _render_targets(db, ctx, tid, [t]))[0]
 
@@ -980,7 +995,7 @@ class TargetEdit(BaseModel):
 
 async def _require_manage_target(db, ctx, tid, t: Target) -> User | None:
     owner = await _owner(db, t)
-    if not R.can_manage_target(ctx.user, t.user_id, owner, ctx.permissions.has("target.manage"), tid):
+    if not R.can_manage_target(ctx.user, t.user_id, owner, ctx.permissions.has("target.manage"), tid, t.dept_id):
         raise HTTPException(404, "Target not found.")
     return owner
 
@@ -1084,7 +1099,7 @@ async def edit_milestone(target_id: int, milestone_id: int, data: MilestoneEdit,
     # The owner may tick milestones; editing text/date needs manage rights.
     owner = await _owner(db, t)
     is_owner = t.user_id == ctx.user.id
-    can_manage = R.can_manage_target(ctx.user, t.user_id, owner, ctx.permissions.has("target.manage"), tid)
+    can_manage = R.can_manage_target(ctx.user, t.user_id, owner, ctx.permissions.has("target.manage"), tid, t.dept_id)
     if not (is_owner or can_manage):
         raise HTTPException(404, "Target not found.")
     m = (await db.execute(select(TargetMilestone).where(

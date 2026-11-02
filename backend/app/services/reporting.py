@@ -51,21 +51,39 @@ def can_view_person(viewer: User, target: User, tenant_id: int | None = None) ->
 
 
 def can_manage_target(viewer: User, target_owner_id: int | None, owner: User | None,
-                      has_manage: bool, tenant_id: int | None = None) -> bool:
+                      has_manage: bool, tenant_id: int | None = None,
+                      target_dept_id: int | None = None) -> bool:
     """
     Change a target's details, milestones, dates.
 
     The owner keeps their own target's progress and milestones; an admin with
-    target.manage keeps the targets of people they oversee (and department
-    targets in their organisation).
+    target.manage keeps the targets of people they oversee. A department
+    target is kept by the Organisation Admins and by that department's own
+    Department Admin — not by the Department Admin of another department.
     """
     if target_owner_id is not None and viewer.id == target_owner_id:
         return True
     if not has_manage:
         return False
     if owner is None:                               # department target
-        return _org(viewer, tenant_id) is not None
+        if _org(viewer, tenant_id) is None:
+            return False
+        if viewer.role == "org_admin":
+            return viewer.dept_id is not None and viewer.dept_id == target_dept_id
+        return True
     return can_oversee(viewer, owner, tenant_id)
+
+
+def sees_department_targets(viewer: User, dept_id: int | None) -> bool:
+    """
+    A department target is set for the department's admin to run, not for
+    everyone in it: visible to the Super Admin, Organisation Admins, and the
+    Department Admin of that department. Employees in the department do not
+    see it in My Targets.
+    """
+    if viewer.role in ("super_admin", "tenant_admin"):
+        return True
+    return viewer.role == "org_admin" and viewer.dept_id is not None and viewer.dept_id == dept_id
 
 
 # ─── numbers ─────────────────────────────────────────────────────────────────
