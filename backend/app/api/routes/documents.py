@@ -59,6 +59,7 @@ from app.api.deps_security import (
     SecurityContext, get_security_context, require_organisation, require_permission,
 )
 from app.core import audit
+from app.core import audit_visibility as visibility
 from app.db.session import get_db
 from app.models.domain import (
     Department, EmployeeDocument, EmployeeDocumentVersion, EmployeePayProfile, HrDocument,
@@ -991,9 +992,13 @@ async def access_log(target_type: Literal["letter", "hr_document", "employee_doc
                      db: AsyncSession = Depends(get_db)):
     """Everything that happened to one letter or document: created, viewed, downloaded, acknowledged."""
     tid = require_organisation(ctx)
-    rows = (await db.execute(select(AuditLog).where(
-        AuditLog.tenant_id == tid, AuditLog.target_type == target_type, AuditLog.target_id == str(target_id)
-    ).order_by(AuditLog.seq.desc()).limit(500))).scalars().all()
+    q = select(AuditLog).where(
+        AuditLog.tenant_id == tid, AuditLog.target_type == target_type, AuditLog.target_id == str(target_id))
+    # Nobody sees what someone more senior did (core/audit_visibility).
+    senior = visibility.actor_condition(AuditLog.actor_role, AuditLog.actor_id, ctx.user, ctx.permissions.grants_all)
+    if senior is not None:
+        q = q.where(senior)
+    rows = (await db.execute(q.order_by(AuditLog.seq.desc()).limit(500))).scalars().all()
     who = await _names(db, [r.actor_id for r in rows])
     return [{"seq": r.seq, "occurred_at": r.occurred_at, "action": r.action, "result": r.result,
              "actor": who.get(r.actor_id) or r.actor_role, "source_ip": r.source_ip,

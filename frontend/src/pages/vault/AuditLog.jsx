@@ -8,7 +8,8 @@
 // not, because new entries arriving would shift what is on them.
 //
 // What you see is scoped on the server: a Tenant Admin sees the whole
-// organisation, an Org Admin their own department.
+// organisation, an Org Admin their own department — and nobody sees what
+// someone more senior did (backend core/audit_visibility).
 //
 // Denials are styled to stand out. A spike in them is what probing looks like,
 // and surfacing that is most of the reason denied attempts are recorded at all.
@@ -224,7 +225,14 @@ export default function AuditLog() {
           <span>
             Showing activity in your department: things done by its people, and
             things done to them, their credentials, leave, tasks and systems.
+            Actions by Organisation Admins and the Super Admin are not shown.
           </span>
+        </div>
+      )}
+      {!grantsAll && user?.role === 'tenant_admin' && (
+        <div className="v-banner info">
+          <Building2 size={14} />
+          <span>Showing activity across your organisation. Actions by the Super Admin are not shown.</span>
         </div>
       )}
 

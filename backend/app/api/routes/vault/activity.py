@@ -24,6 +24,7 @@ from app.api.deps_security import (
     require_permission,
 )
 from app.core import audit
+from app.core import audit_visibility as visibility
 from app.db.session import get_db
 from app.models.credentials import Credential, System
 from app.models.domain import Leave, Task, Tenant, User
@@ -427,6 +428,13 @@ async def _org_names(db: AsyncSession, rows) -> dict[int, str]:
     return dict(result.all())
 
 
+def _seniority(ctx: SecurityContext) -> list:
+    """Hide entries by anyone more senior than the viewer (empty for a Super Admin)."""
+    c = visibility.actor_condition(AuditLog.actor_role, AuditLog.actor_id, ctx.user,
+                                   ctx.permissions.grants_all)
+    return [c] if c is not None else []
+
+
 def scope_conditions(ctx: SecurityContext, all_orgs: bool = False) -> list:
     """
     Which audit entries this person may read. One rule for the log, the
@@ -442,10 +450,14 @@ def scope_conditions(ctx: SecurityContext, all_orgs: bool = False) -> list:
                        systems, or the department itself
 
     The same department line as People and the Dependency Map. An Org Admin
-    sees what happens in Operations — including a Tenant Admin acting on
-    Operations' people — and nothing about Engineering. Organisation-wide
+    sees what happens in Operations — what its people did, and what other
+    Operations-level staff did to them — and nothing about Engineering. Organisation-wide
     entries (office hours, API key, other departments) stay with the Tenant
     Admin. Someone with no department sees only their own actions.
+
+    On top of that, nobody sees the actions of someone more senior
+    (core/audit_visibility): an Org Admin never sees a Tenant Admin's or Super
+    Admin's entries, a Tenant Admin never sees a Super Admin's.
     """
     if ctx.permissions.grants_all:
         acting = getattr(ctx, "acting_tenant_id", None)
@@ -455,8 +467,9 @@ def scope_conditions(ctx: SecurityContext, all_orgs: bool = False) -> list:
 
     user = ctx.user
     in_tenant = AuditLog.tenant_id == user.tenant_id
+    seniority = visibility.actor_condition(AuditLog.actor_role, AuditLog.actor_id, user)
     if user.role == "tenant_admin":
-        return [in_tenant]
+        return [c for c in (in_tenant, seniority) if c is not None]
 
     if user.dept_id is None:
         return [in_tenant, AuditLog.actor_id == user.id]
@@ -478,8 +491,9 @@ def scope_conditions(ctx: SecurityContext, all_orgs: bool = False) -> list:
     def about(kind, ids_as_text):
         return (AuditLog.target_type == kind) & AuditLog.target_id.in_(ids_as_text)
 
-    return [
+    conds = [
         in_tenant,
+        seniority,
         or_(
             AuditLog.actor_id.in_(people),
             about("user", people_s),
@@ -490,6 +504,7 @@ def scope_conditions(ctx: SecurityContext, all_orgs: bool = False) -> list:
             (AuditLog.target_type == "department") & (AuditLog.target_id == str(user.dept_id)),
         ),
     ]
+    return [c for c in conds if c is not None]
 
 
 @router.get("/credentials/{credential_id}/activity")
@@ -519,6 +534,7 @@ async def credential_activity(
                 AuditLog.target_type == "credential",
                 AuditLog.target_id == str(credential_id),
                 AuditLog.action.in_(CREDENTIAL_ACTIONS),
+                *_seniority(ctx),
             )
             .order_by(AuditLog.occurred_at.desc())
             .limit(limit)
