@@ -161,7 +161,6 @@ const Sidebar = ({ role, label, iconColor }) => {
       case 'orgadmin':
         return [
           { icon: <LayoutDashboard size={18} />, label: 'Dashboard', path: '/org/dashboard' },
-          { icon: <GitFork size={18} />, label: 'Organisation Tree', path: '/organisation' },
           { icon: <Timer size={18} />, label: 'Team Sign-ins', path: '/org/clock-team' },
           { icon: <LogIn size={18} />, label: 'My Sign-in Log', path: '/org/my-clock' },
           { icon: <Users size={18} />, label: 'All Employees', path: '/org/employees' },
@@ -194,7 +193,6 @@ const Sidebar = ({ role, label, iconColor }) => {
       case 'user':
         return [
           { icon: <LayoutDashboard size={18} />, label: 'Dashboard', path: '/emp/dashboard' },
-          { icon: <GitFork size={18} />, label: 'Organisation Tree', path: '/organisation' },
           { icon: <LogIn size={18} />, label: 'Sign In / Out', path: '/emp/clock' },
           { icon: <Clock size={18} />, label: 'Attendance List', path: '/emp/attendance' },
           { icon: <Briefcase size={18} />, label: 'Leave List', path: '/emp/leaves' },

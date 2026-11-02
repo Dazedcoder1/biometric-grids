@@ -19,6 +19,10 @@ demotes whoever held that seat to an ordinary employee — account, history
 and department kept. Every change is in the audit log and the people
 affected are notified.
 
+Who may open it at all: Organisation Admins and the Super Admin. Department
+Admins and employees get 403 on every route — they manage their own people
+from Vault → People (which has the password reset) and Employees.
+
 All checks are made here, on the server. The tree only hides buttons the
 server would refuse anyway; a request for someone outside the caller's scope
 gets the same 404 as a request for someone who does not exist.
@@ -39,7 +43,16 @@ from app.services import notification_service
 from app.services import org_tree as T
 from app.services.oversight_service import can_oversee
 
-router = APIRouter()
+TREE_ROLES = ("super_admin", "tenant_admin")
+
+
+async def _tree_access(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role not in TREE_ROLES:
+        raise HTTPException(403, "The organisation tree is available to Organisation Admins and the Super Admin.")
+    return current_user
+
+
+router = APIRouter(dependencies=[Depends(_tree_access)])
 
 
 async def _tenant(db, tenant_id: int) -> Tenant:

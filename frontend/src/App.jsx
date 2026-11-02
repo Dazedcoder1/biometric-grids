@@ -270,11 +270,11 @@ function App() {
             <Route path="/reporting/team" element={<ProtectedRoute allowedRoles={['tenant_admin', 'superadmin', 'org_admin', 'department_admin']} allowHr><TeamReports /></ProtectedRoute>} />
 
             {/* ==================== ORGANISATION TREE ==================== */}
-            {/* Every role; the server decides how much of the tree each sees. */}
+            {/* Organisation Admins and the Super Admin only — the server refuses everyone else. */}
             <Route
               path="/organisation"
               element={
-                <ProtectedRoute allowedRoles={['tenant_admin', 'superadmin', 'org_admin', 'department_admin', 'employee', 'user']}>
+                <ProtectedRoute allowedRoles={['tenant_admin', 'superadmin']}>
                   <OrgTree />
                 </ProtectedRoute>
               }
