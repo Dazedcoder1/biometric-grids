@@ -510,3 +510,11 @@ nav ul,nav ol,.sidebar ul,.sidebar ol,ul.plain,ol.plain{padding-left:0;list-styl
   .today-item { min-width: 40%; }
 }
 
+/* "Shams" / "Tahzib" anywhere on screen: a faint gold line around just the
+   word (utils/nameHighlight.js draws these boxes in a click-through layer). */
+.gold-name-layer { position: fixed; inset: 0; pointer-events: none; z-index: 5; overflow: hidden; }
+.gold-name-box {
+  position: absolute; left: 0; top: 0; box-sizing: border-box;
+  border: 1px solid rgba(201, 162, 39, 0.34); border-radius: 4px;
+}
+:root:not(.light-mode) .gold-name-box { border-color: rgba(230, 195, 92, 0.28); }
