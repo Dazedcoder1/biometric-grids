@@ -328,7 +328,7 @@ const Topbar = ({ title, userAbbr, bgColor, iconColor, role }) => {
                 <div className="user-dropdown-role">
                   {superAdmin
                     ? 'Super Admin'
-                    : role === 'superadmin' ? 'Tenant Admin' : role === 'orgadmin' ? 'Org Admin' : 'Employee'}
+                    : role === 'superadmin' ? 'Tenant Admin' : role === 'orgadmin' ? 'Department Admin' : 'Employee'}
                 </div>
               </div>
             </div>

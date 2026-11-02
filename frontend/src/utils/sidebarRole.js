@@ -9,6 +9,9 @@
  *
  * The vault is used by every role, so these pages cannot hardcode one. They
  * ask who is signed in and translate.
+ *
+ * Labels match the ones the role's own pages hardcode ("Department Admin",
+ * DA), so the badge does not change as you move between pages.
  */
 
 const TO_SIDEBAR = {
@@ -24,13 +27,13 @@ const TO_SIDEBAR = {
 
 const LABELS = {
   superadmin: 'Tenant Admin',
-  orgadmin: 'Org Admin',
+  orgadmin: 'Department Admin',
   user: 'Employee',
 };
 
 const COLOURS = {
   superadmin: { color: '#a855f7', bgColor: 'rgba(168,85,247,0.15)', abbr: 'TA' },
-  orgadmin: { color: '#00d4aa', bgColor: 'rgba(0,212,170,0.15)', abbr: 'OA' },
+  orgadmin: { color: '#00d4aa', bgColor: 'rgba(0,212,170,0.15)', abbr: 'DA' },
   user: { color: '#f59e0b', bgColor: 'rgba(245,158,11,0.15)', abbr: 'EM' },
 };
 

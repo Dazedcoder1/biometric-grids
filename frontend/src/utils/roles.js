@@ -24,7 +24,7 @@ const ALIASES = {
 
 export const ROLE_LABEL = {
   tenant_admin: 'Tenant Admin',
-  org_admin: 'Org Admin',
+  org_admin: 'Department Admin',
   employee: 'Employee',
 };
 

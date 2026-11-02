@@ -641,7 +641,7 @@ function ManageOrganisationModal({ orgId, onClose, onChanged, onDeleted }) {
                   {a.email && <span style={{ color: 'var(--text3)' }}> · {a.email}</span>}
                 </span>
                 <span className={`v-chip ${a.role === 'tenant_admin' ? 'info' : ''}`}>
-                  {a.role === 'tenant_admin' ? 'Tenant Admin' : 'Org Admin'}
+                  {a.role === 'tenant_admin' ? 'Tenant Admin' : 'Department Admin'}
                 </span>
                 {!a.is_active && <span className="v-chip">inactive</span>}
               </div>

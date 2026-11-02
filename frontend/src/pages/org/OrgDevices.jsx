@@ -724,7 +724,7 @@ const OrgDevices = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Devices" role="orgadmin" label="Org Admin" abbr="OA" color="#14b8a6" bgColor="rgba(20,184,166,0.15)">
+      <DashboardLayout title="Devices" role="orgadmin" label="Department Admin" abbr="DA" color="#00d4aa" bgColor="rgba(0,212,170,0.15)">
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
           Loading devices...
         </div>
@@ -733,7 +733,7 @@ const OrgDevices = () => {
   }
 
   return (
-    <DashboardLayout title="Devices" role="orgadmin" label="Org Admin" abbr="OA" color="#14b8a6" bgColor="rgba(20,184,166,0.15)">
+    <DashboardLayout title="Devices" role="orgadmin" label="Department Admin" abbr="DA" color="#00d4aa" bgColor="rgba(0,212,170,0.15)">
       <style>{`
         .stats-grid {
           display: grid;

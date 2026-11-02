@@ -36,7 +36,7 @@ import './vault.css';
 
 const REVEAL_SECONDS = 30;
 
-const ROLE_LABEL = { tenant_admin: 'Tenant Admin', org_admin: 'Org Admin', employee: 'Employee' };
+const ROLE_LABEL = { tenant_admin: 'Tenant Admin', org_admin: 'Department Admin', employee: 'Employee' };
 
 /** A cached step-up token if it has not expired yet. Reads the clock, so it
  *  lives outside the component and is only ever called from event handlers. */
