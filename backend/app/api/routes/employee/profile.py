@@ -3,12 +3,14 @@ import re
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.session import get_db
+
 from app.api.dependencies import get_current_user
 from app.core import activity
 from app.core.security import hash_password, verify_password
+from app.db.session import get_db
 from app.models.domain import User
-from app.schemas.schemas import UserResponse, ProfileUpdate
+from app.models.identity_guard import MESSAGE as IDENTITY_LOCKED
+from app.schemas.schemas import ProfileUpdate, UserResponse
 
 router = APIRouter()
 
@@ -45,9 +47,9 @@ async def update_profile(
 ):
     """Update current user's profile info"""
     changed = []
-    if data.name and data.name != current_user.name:
-        current_user.name = data.name
-        changed.append("name")
+    # Your name is fixed once your account exists; only the email can change here.
+    if data.name and data.name.strip() != (current_user.name or ""):
+        raise HTTPException(400, IDENTITY_LOCKED)
     if data.email and data.email != current_user.email:
         current_user.email = data.email
         changed.append("email")

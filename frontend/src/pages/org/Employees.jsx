@@ -234,10 +234,10 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onSuccess, departments }
     setSubmitting(true);
     setError('');
 
+    // Name and employee code are permanent once the account exists, so they
+    // are never sent.
     const updateData = {};
-    if (formData.name !== employee.name) updateData.name = formData.name;
     if (formData.email !== employee.email) updateData.email = formData.email;
-    if (formData.employee_code !== employee.employee_code) updateData.employee_code = formData.employee_code;
     if (formData.finger_id !== employee.finger_id && formData.finger_id) updateData.finger_id = parseInt(formData.finger_id);
     if (formData.dept_id !== employee.department_id && formData.dept_id) updateData.dept_id = parseInt(formData.dept_id);
 
@@ -288,9 +288,10 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onSuccess, departments }
               <label className="form-label">Full Name</label>
               <input 
                 className="form-input" 
-                placeholder="Employee name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                readOnly
+                disabled
+                title="A name can't be changed after the account is created"
               />
             </div>
             
@@ -309,10 +310,12 @@ const EditEmployeeModal = ({ isOpen, onClose, employee, onSuccess, departments }
               <label className="form-label">Employee Code</label>
               <input 
                 className="form-input" 
-                placeholder="Employee code"
                 value={formData.employee_code}
-                onChange={(e) => setFormData({ ...formData, employee_code: e.target.value })}
+                readOnly
+                disabled
+                title="An employee ID can't be changed after the account is created"
               />
+              <p className="form-hint">Name and employee ID are fixed once an employee is created.</p>
             </div>
             
             <div className="form-group">

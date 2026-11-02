@@ -125,8 +125,8 @@ async def run(args) -> int:
         if existing:
             existing.password_hash = hash_password(password)
             existing.is_active = True
-            if args.name:
-                existing.name = args.name.strip()
+            if args.name and args.name.strip() != (existing.name or ""):
+                print("  (--name ignored: a name can't be changed once the account exists.)")
             action = "Password reset"
         else:
             db.add(User(

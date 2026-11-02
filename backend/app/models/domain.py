@@ -876,3 +876,9 @@ class TargetUpdate(Base):
 
 # Legacy compat alias
 AdminUser = User
+
+
+# Names and employee IDs are permanent once an account exists (enforced on every flush).
+from app.models import identity_guard as _identity_guard  # noqa: E402
+
+_identity_guard.install()

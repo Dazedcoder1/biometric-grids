@@ -183,9 +183,13 @@ async def upsert_user(db, *, tenant_id, dept_id, name, email, role, code=None,
     if user:
         user.tenant_id = tenant_id
         user.dept_id = dept_id
-        user.name = name
+        # Name and employee ID are permanent once an account exists
+        # (models/identity_guard.py) — fill them only if never set.
+        if not user.name:
+            user.name = name
+        if not user.employee_code:
+            user.employee_code = code
         user.role = role
-        user.employee_code = code
         user.finger_id = finger_id
         user.password_hash = hash_password(PASSWORD)
         user.is_active = True

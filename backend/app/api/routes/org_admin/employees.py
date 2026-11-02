@@ -1,15 +1,19 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, Request
-from app.core import activity
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func
-from sqlalchemy.future import select
-from pydantic import BaseModel
+﻿import secrets
+import string
 from typing import Optional
-import secrets, string
-from app.db.session import get_db
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel
+from sqlalchemy import func
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
 from app.api.dependencies import require_role
-from app.models.domain import User
+from app.core import activity
 from app.core.security import hash_password
+from app.db.session import get_db
+from app.models.domain import User
+from app.models.identity_guard import MESSAGE as IDENTITY_LOCKED
 from app.services.notification_service import notify_single_user
 
 router = APIRouter()
@@ -95,8 +99,10 @@ async def update_employee(employee_id: int, data: EmployeeUpdate, request: Reque
     result = await db.execute(select(User).where(User.id == employee_id, User.tenant_id == current_user.tenant_id, User.dept_id == current_user.dept_id, User.role == 'employee'))
     employee = result.scalars().first()
     if not employee: raise HTTPException(404, "Employee not found")
-    changed = [f for f in ("name", "finger_id", "is_active") if getattr(data, f) is not None]
-    if data.name is not None: employee.name = data.name
+    # The name is fixed once the account exists; sending the same name back is fine.
+    if data.name is not None and data.name.strip() != (employee.name or ""):
+        raise HTTPException(400, IDENTITY_LOCKED)
+    changed = [f for f in ("finger_id", "is_active") if getattr(data, f) is not None]
     if data.finger_id is not None: employee.finger_id = data.finger_id
     if data.is_active is not None:
         employee.is_active = data.is_active

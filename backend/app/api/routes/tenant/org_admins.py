@@ -1,16 +1,18 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, Request
-from app.core import activity
+﻿import secrets
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import text
-from pydantic import BaseModel
-from typing import Optional
-from app.db.session import get_db
-from app.api.dependencies import verify_tenant_api_key
-from app.models.domain import Tenant, Department, User
-from app.core.security import hash_password
 
-import secrets
+from app.api.dependencies import verify_tenant_api_key
+from app.core import activity
+from app.core.security import hash_password
+from app.db.session import get_db
+from app.models.domain import Department, Tenant, User
+from app.models.identity_guard import MESSAGE as IDENTITY_LOCKED
 
 router = APIRouter()
 
@@ -118,8 +120,10 @@ async def update_org_admin(admin_id: int, data: OrgAdminUpdate, request: Request
     org_admin = result.scalars().first()
     if not org_admin:
         raise HTTPException(404, "Org admin not found")
-    changed = [f for f in ("name", "dept_id", "is_active") if getattr(data, f) is not None]
-    if data.name is not None: org_admin.name = data.name
+    # The name is fixed once the account exists; sending the same name back is fine.
+    if data.name is not None and data.name.strip() != (org_admin.name or ""):
+        raise HTTPException(400, IDENTITY_LOCKED)
+    changed = [f for f in ("dept_id", "is_active") if getattr(data, f) is not None]
     if data.dept_id is not None:
         dept_result = await db.execute(select(Department).where(Department.department_id == data.dept_id, Department.tenant_id == tenant.id))
         if not dept_result.scalars().first():

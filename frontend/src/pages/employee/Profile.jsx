@@ -51,7 +51,8 @@ const Profile = () => {
     setSuccess(null);
     
     try {
-      const result = await profileAPI.updateProfile(editData);
+      // Only the email is editable; a name is fixed once the account exists.
+      const result = await profileAPI.updateProfile({ email: editData.email });
       setSuccess('Profile updated successfully!');
       await fetchProfile();
       // Clear success message after 3 seconds
@@ -233,9 +234,13 @@ const Profile = () => {
                 <input 
                   className="form-input" 
                   value={editData.name}
-                  onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                  required
+                  readOnly
+                  disabled
+                  title="Your name can't be changed. Ask HR if it is wrong."
                 />
+                <p className="form-hint" style={{ fontSize: '.75rem', color: 'var(--text3)', marginTop: '.3rem' }}>
+                  Your name and employee ID are fixed.
+                </p>
               </div>
               <div className="form-group">
                 <label className="form-label">Email</label>

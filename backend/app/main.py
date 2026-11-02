@@ -238,6 +238,16 @@ app.include_router(vault_oversight_router, prefix=VAULT_PREFIX, tags=["Vault - O
 
 
 # ─── Global error handler ─────────────────────────────────────────────────────
+from app.models.identity_guard import IdentityLocked  # noqa: E402
+
+
+@app.exception_handler(IdentityLocked)
+async def identity_locked_handler(request: Request, exc: IdentityLocked):
+    # Backstop for any code path that tries to rename someone or change
+    # their employee ID (models/identity_guard.py).
+    return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled error: {exc}", exc_info=True)
