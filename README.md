@@ -136,6 +136,24 @@ file — and you get a config that works for one person and nobody else.
 
 ---
 
+## Day-end reporting and targets
+
+| Page | Who | What |
+|---|---|---|
+| **My Day** (`/my-day`) | everyone | Day-end report. Left: work assigned to you (Task Manager tasks and items your manager set). Right: status, hours, % and a note per item, other work, summary, blockers, tomorrow's plan. Missed days can be filed up to 14 days late. |
+| **Team Reports** (`/reporting/team`) | admins, HR | Who submitted, who is missing, each person's open / blocked / overdue work. Review, send back with a comment, assign work. |
+| **Targets** (`/reporting/targets`) | everyone | 3/6/12-month targets with milestones on a Gantt timeline. |
+
+Submitting a report updates the linked items and tasks (a GitHub-linked task
+closes its issue when marked Done) and notifies whoever assigned blocked work.
+A reminder goes out 30 minutes before office end to anyone who signed in but
+has not submitted.
+
+After pulling these changes, run `alembic upgrade head` — migrations
+`i4d5e6f7a8b9` and `j5e6f7a8b9c0` add the reporting tables.
+
+---
+
 ## Notes on Neon
 
 - **Compute suspends after ~5 minutes idle.** The first request after a pause

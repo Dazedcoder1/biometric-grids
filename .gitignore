@@ -47,3 +47,7 @@ docs/
 PROGRESS.md
 *.docx
 .neon
+
+# Local helper that rewrites DATABASE_URL in your own .env. Personal tooling,
+# kept out of the repository.
+backend/scripts/sync_neon_url.ps1

@@ -477,7 +477,6 @@ export const tenantApi = {
     return apiRequest(`/api/tenant/holidays${params}`);
   },
   createHoliday: (data) => apiRequest('/api/tenant/holidays', { method: 'POST', body: JSON.stringify(data) }),
-  getTenantProfile: () => apiRequest('/api/tenant/profile'),
   updateHoliday: (id, data) => apiRequest(`/api/tenant/holidays/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteHoliday: (id) => apiRequest(`/api/tenant/holidays/${id}`, { method: 'DELETE' }),
   getUpcomingHolidays: (limit = 5) => apiRequest(`/api/tenant/holidays/upcoming?limit=${limit}`),
